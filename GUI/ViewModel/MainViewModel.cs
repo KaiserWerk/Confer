@@ -47,7 +47,7 @@ namespace GUI.ViewModel
             WindowManager.OpenRequestFileWindow();
         }
 
-        private void LoadRecentFiles(string host)
+        private void LoadRecentFiles()
         {
             this.RecentFiles = new ObservableCollection<RemoteFileInfo>(CacheHelper.GetRecentFiles());
         }
