@@ -1,0 +1,40 @@
+﻿<Window x:Class="GUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GUI"
+        mc:Ignorable="d"
+        Title="Confer Client" Height="450" Width="800"
+        WindowStartupLocation="CenterScreen"
+        DataContext="{Binding Source={StaticResource Locator}, Path=MainViewModel}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*" />
+            <ColumnDefinition Width="2*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="8*" />
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Column="0" Grid.Row="0">
+            <MenuItem Header="File">
+                <MenuItem Header="Request file" Command="{Binding RequestFileCommand}" />
+                <Separator />
+                <MenuItem Header="Exit" Click="MenuItemExit_OnClick"></MenuItem>
+            </MenuItem>
+        </Menu>
+
+        <TextBlock Grid.Column="0" Grid.Row="1" Text="File content" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
+
+
+        <TextBox Grid.Column="0" Grid.Row="2" Margin="5"></TextBox>
+
+        <TextBlock Grid.Column="1" Grid.Row="1" Text="Recently used files" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
+        <ListView Grid.Column="1" Grid.Row="2" Margin="5" DataContext="{Binding Path=RecentFiles}">
+
+        </ListView>
+    </Grid>
+</Window>
