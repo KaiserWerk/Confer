@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics;
+using System.Net.Http;
 using System.Text.Json;
+using System.Threading.Tasks;
+using System.Windows;
 using Core.Helper;
 using Core.Model;
 using GalaSoft.MvvmLight;
@@ -33,30 +36,41 @@ namespace GUI.ViewModel
 
             var url = "http://" + this.ServerAddress + "/file";
             Debug.WriteLine(url);
-
-            var response = await HttpHelper.PostRequestAsync(url, data, this.AuthKey);
-            if (response.IsSuccessStatusCode)
+            // try catch wg timeout oder kein netz
+            try
             {
-                string body = await response.Content.ReadAsStringAsync();
-                respFile = JsonSerializer.Deserialize<FilePostResponse>(body);
+                var response = await HttpHelper.PostRequestAsync(url, data, this.AuthKey);
+                if (response.IsSuccessStatusCode)
+                {
+                    string body = await response.Content.ReadAsStringAsync();
+                    respFile = JsonSerializer.Deserialize<FilePostResponse>(body);
+                }
+
+                if (respFile != null)
+                {
+                    var f = new RemoteFileInfo()
+                    {
+                        RemoteHost = this.ServerAddress,
+                        AuthKey = this.AuthKey,
+                        FileName = this.RemoteFile
+                    };
+                    Messenger.Send(f);
+
+                    var f2 = new RequestedFile()
+                    {
+                        FileName = this.RemoteFile,
+                        FileContent = respFile.Data.FileContent
+                    };
+                    Messenger.Send(f2);
+                }
             }
-
-            if (respFile != null)
+            catch (TaskCanceledException e)
             {
-                var f = new RemoteFileInfo()
-                {
-                    RemoteHost = this.ServerAddress,
-                    AuthKey = this.AuthKey,
-                    FileName = this.RemoteFile
-                };
-                Messenger.Send(f);
-
-                var f2 = new RequestedFile()
-                {
-                    FileName = this.RemoteFile,
-                    FileContent = respFile.Data.FileContent
-                };
-                Messenger.Send(f2);
+                MessageBox.Show("Connection timed out!", "Error");
+            }
+            catch (HttpRequestException e)
+            {
+                MessageBox.Show("Connection timed out!!", "Error");
             }
 
             WindowManager.CloseRequestFileWindow();

@@ -24,11 +24,11 @@ namespace GUI.Helper
             return l;
         }
 
-        public static void SaveRecentFilesForHost(string host, List<RemoteFileInfo> fileList)
+        public static void SaveRecentFiles(IEnumerable<RemoteFileInfo> fileList)
         {
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
-            var d = JsonSerializer.Serialize(fileList);
+            var d = JsonSerializer.Serialize(fileList, new JsonSerializerOptions() { WriteIndented = true });
             File.WriteAllText(file, d);
         }
     }

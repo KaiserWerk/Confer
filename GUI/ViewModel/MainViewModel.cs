@@ -1,12 +1,11 @@
-﻿using System.Collections.ObjectModel;
-using System.Text.Json;
-using System.Windows;
-using System.Windows.Media.Animation;
-using Core.Helper;
+﻿using Core.Helper;
 using Core.Model;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
 using GUI.Helper;
+using System.Collections.ObjectModel;
+using System.Text.Json;
+using System.Windows;
 
 namespace GUI.ViewModel
 {
@@ -46,7 +45,8 @@ namespace GUI.ViewModel
 
             this.RequestFileCommand = new RelayCommand(this.RequestFileCommandExecute);
             this.SaveFileCommand = new RelayCommand(this.SaveFileCommandExecute);
-            
+
+            this.RecentFiles = new ObservableCollection<RemoteFileInfo>(CacheHelper.GetRecentFiles());
         }
 
         private async void SaveFileCommandExecute()
@@ -66,6 +66,7 @@ namespace GUI.ViewModel
                 if (respFile.Status == "success")
                 {
                     MessageBox.Show("File saved!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    CacheHelper.SaveRecentFiles(this.RecentFiles);
                     return;
                 }
             }
@@ -77,7 +78,11 @@ namespace GUI.ViewModel
         {
             var f = obj as RemoteFileInfo;
             if (f == null)
+            {
+                MessageBox.Show("Could not fetch file!", "Error");
                 return;
+            }
+                
             this.RecentFiles.Add(f);
             this.currentHost = f.RemoteHost;
             this.currentAuthKey = f.AuthKey;
