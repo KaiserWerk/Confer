@@ -4,7 +4,9 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
 using GUI.Helper;
 using System.Collections.ObjectModel;
+using System.Net.Http;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace GUI.ViewModel
@@ -16,6 +18,7 @@ namespace GUI.ViewModel
         private ObservableCollection<RemoteFileInfo> recentFiles = new ObservableCollection<RemoteFileInfo>();
         private string currentFileName;
         private string currentFileContent;
+        private RemoteFileInfo selectedFile;
 
         public ObservableCollection<RemoteFileInfo> RecentFiles
         {
@@ -35,6 +38,19 @@ namespace GUI.ViewModel
             set => base.Set(ref currentFileContent, value);
         }
 
+        public RemoteFileInfo SelectedFile
+        {
+            get => selectedFile;
+            set
+            {
+                if (value != null)
+                {
+                    selectedFile = value;
+                    this.RequestRecentFile(value);
+                }
+            }
+        }
+
         public RelayCommand RequestFileCommand { get; set; }
         public RelayCommand SaveFileCommand { get; set; }
 
@@ -47,6 +63,34 @@ namespace GUI.ViewModel
             this.SaveFileCommand = new RelayCommand(this.SaveFileCommandExecute);
 
             this.RecentFiles = new ObservableCollection<RemoteFileInfo>(CacheHelper.GetRecentFiles());
+        }
+
+        private async void RequestRecentFile(RemoteFileInfo value)
+        {
+            try
+            {
+                var response = await DataHelper.FetchRemoteFile(this.SelectedFile);
+                if (response != null)
+                {
+                    this.currentHost = this.SelectedFile.RemoteHost;
+                    this.currentAuthKey = this.SelectedFile.AuthKey;
+
+                    this.CurrentFileName = response.Data.FileName;
+                    this.CurrentFileContent = response.Data.FileContent;
+                }
+                else
+                {
+                    MessageBox.Show("Empty response!", "Error");
+                }
+            }
+            catch (TaskCanceledException e)
+            {
+                MessageBox.Show("Connection timed out!", "Error");
+            }
+            catch (HttpRequestException e)
+            {
+                MessageBox.Show("Connection timed out!!", "Error");
+            }
         }
 
         private async void SaveFileCommandExecute()

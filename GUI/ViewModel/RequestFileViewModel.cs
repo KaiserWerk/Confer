@@ -26,42 +26,29 @@ namespace GUI.ViewModel
 
         private async void RequestFileCommandExecute()
         {
-            FilePostResponse respFile = null;
-            var reqFile = new RequestedFile()
+            var rfi = new RemoteFileInfo()
             {
+                RemoteHost = this.ServerAddress,
+                AuthKey = this.AuthKey,
                 FileName = this.RemoteFile
             };
-
-            string data = JsonSerializer.Serialize(reqFile);
-
-            var url = "http://" + this.ServerAddress + "/file";
-            Debug.WriteLine(url);
-            // try catch wg timeout oder kein netz
             try
             {
-                var response = await HttpHelper.PostRequestAsync(url, data, this.AuthKey);
-                if (response.IsSuccessStatusCode)
+                var response = await DataHelper.FetchRemoteFile(rfi);
+                if (response != null)
                 {
-                    string body = await response.Content.ReadAsStringAsync();
-                    respFile = JsonSerializer.Deserialize<FilePostResponse>(body);
-                }
-
-                if (respFile != null)
-                {
-                    var f = new RemoteFileInfo()
-                    {
-                        RemoteHost = this.ServerAddress,
-                        AuthKey = this.AuthKey,
-                        FileName = this.RemoteFile
-                    };
-                    Messenger.Send(f);
+                    Messenger.Send(rfi);
 
                     var f2 = new RequestedFile()
                     {
                         FileName = this.RemoteFile,
-                        FileContent = respFile.Data.FileContent
+                        FileContent = response.Data.FileContent
                     };
                     Messenger.Send(f2);
+                }
+                else
+                {
+                    MessageBox.Show("Empty response!", "Error");
                 }
             }
             catch (TaskCanceledException e)
