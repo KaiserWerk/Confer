@@ -1,21 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Diagnostics;
 using System.Text.Json;
-using Core;
 using Core.Helper;
 using Core.Model;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
-using GalaSoft.MvvmLight.Messaging;
+using GUI.Helper;
 
 namespace GUI.ViewModel
 {
     public class RequestFileViewModel : ViewModelBase
     {
-        public string ServerAddress { get; set; }
-        public string AuthKey { get; set; }
-        public string RemoteFile { get; set; }
+        public string ServerAddress { get; set; } = "127.0.0.1:1663";
+        public string AuthKey { get; set; } = "your-authkey";
+        public string RemoteFile { get; set; } = @"C:\Local\app.yaml";
 
         public RelayCommand RequestFileCommand { get; set; }
 
@@ -34,7 +31,10 @@ namespace GUI.ViewModel
 
             string data = JsonSerializer.Serialize(reqFile);
 
-            var response = await HttpHelper.PostRequestAsync("http://" + this.ServerAddress, data, this.AuthKey);
+            var url = "http://" + this.ServerAddress + "/file";
+            Debug.WriteLine(url);
+
+            var response = await HttpHelper.PostRequestAsync(url, data, this.AuthKey);
             if (response.IsSuccessStatusCode)
             {
                 string body = await response.Content.ReadAsStringAsync();
@@ -49,15 +49,17 @@ namespace GUI.ViewModel
                     AuthKey = this.AuthKey,
                     FileName = this.RemoteFile
                 };
-                Messenger.Default.Send(f);
+                Messenger.Send(f);
 
                 var f2 = new RequestedFile()
                 {
                     FileName = this.RemoteFile,
                     FileContent = respFile.Data.FileContent
                 };
-                Messenger.Default.Send(f2);
+                Messenger.Send(f2);
             }
+
+            WindowManager.CloseRequestFileWindow();
         }
     }
 }

@@ -1,24 +1,22 @@
 ﻿using System.Collections.ObjectModel;
-using Core;
+using System.Text.Json;
+using System.Windows;
+using System.Windows.Media.Animation;
+using Core.Helper;
 using Core.Model;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
-using GalaSoft.MvvmLight.Messaging;
 using GUI.Helper;
 
 namespace GUI.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
-        private string connectedHost;
-        private ObservableCollection<RemoteFileInfo> recentFiles;
-
-
-        public string ConnectedHost
-        {
-            get => connectedHost;
-            set => base.Set(ref connectedHost, value);
-        }
+        private string currentHost;
+        private string currentAuthKey;
+        private ObservableCollection<RemoteFileInfo> recentFiles = new ObservableCollection<RemoteFileInfo>();
+        private string currentFileName;
+        private string currentFileContent;
 
         public ObservableCollection<RemoteFileInfo> RecentFiles
         {
@@ -26,20 +24,73 @@ namespace GUI.ViewModel
             set => base.Set(ref recentFiles, value);
         }
 
+        public string CurrentFileName
+        {
+            get => currentFileName;
+            set => base.Set(ref currentFileName, value);
+        }
+
+        public string CurrentFileContent
+        {
+            get => currentFileContent;
+            set => base.Set(ref currentFileContent, value);
+        }
+
         public RelayCommand RequestFileCommand { get; set; }
+        public RelayCommand SaveFileCommand { get; set; }
 
         public MainViewModel()
         {
-            this.RequestFileCommand = new RelayCommand(this.RequestFileCommandExecute);
+            Messenger.Register<RequestedFile>(this.ReceiveRequestedFile);
+            Messenger.Register<RemoteFileInfo>(this.ReceiveRemoteFileInfo);
 
-            Messenger.Default.Register<TransmitRequestedFileMessage>(this, this.ReceiveRequestedFile);
+            this.RequestFileCommand = new RelayCommand(this.RequestFileCommandExecute);
+            this.SaveFileCommand = new RelayCommand(this.SaveFileCommandExecute);
+            
         }
 
-        private void ReceiveRequestedFile(TransmitRequestedFileMessage obj)
+        private async void SaveFileCommandExecute()
         {
-            var file = obj.Content;
+            var rq = new RequestedFile()
+            {
+                FileName = this.CurrentFileName,
+                FileContent = this.CurrentFileContent
+            };
+            var json = JsonSerializer.Serialize(rq);
 
-            // add to cache
+            var response = await HttpHelper.PutRequestAsync("http://" + this.currentHost + "/file", json, this.currentAuthKey);
+            if (response.IsSuccessStatusCode)
+            {
+                string body = await response.Content.ReadAsStringAsync();
+                var respFile = JsonSerializer.Deserialize<FilePostResponse>(body);
+                if (respFile.Status == "success")
+                {
+                    MessageBox.Show("File saved!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+            }
+
+            MessageBox.Show("Error saving file!", "Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+        }
+
+        private void ReceiveRemoteFileInfo(object obj)
+        {
+            var f = obj as RemoteFileInfo;
+            if (f == null)
+                return;
+            this.RecentFiles.Add(f);
+            this.currentHost = f.RemoteHost;
+            this.currentAuthKey = f.AuthKey;
+        }
+
+        private void ReceiveRequestedFile(object obj)
+        {
+            var file = obj as RequestedFile;
+            if (file == null)
+                return;
+            this.CurrentFileName = file.FileName;
+            this.CurrentFileContent = file.FileContent;
+
         }
 
         private void RequestFileCommandExecute()

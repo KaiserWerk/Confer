@@ -8,6 +8,9 @@
         Title="Confer Client" Height="450" Width="800"
         WindowStartupLocation="CenterScreen"
         DataContext="{Binding Source={StaticResource Locator}, Path=MainViewModel}">
+    <Window.InputBindings>
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding Path=SaveFileCommand}"/>
+    </Window.InputBindings>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5*" />
@@ -19,18 +22,20 @@
             <RowDefinition Height="8*" />
         </Grid.RowDefinitions>
 
-        <Menu Grid.Column="0" Grid.Row="0">
+        <Menu Grid.Column="0" Grid.Row="0" Grid.RowSpan="2">
             <MenuItem Header="File">
                 <MenuItem Header="Request file" Command="{Binding RequestFileCommand}" />
                 <Separator />
-                <MenuItem Header="Exit" Click="MenuItemExit_OnClick"></MenuItem>
+                <MenuItem Header="Exit" Click="MenuItemExit_OnClick" />
             </MenuItem>
         </Menu>
 
-        <TextBlock Grid.Column="0" Grid.Row="1" Text="File content" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
+        <StackPanel Grid.Column="0" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+            <TextBlock Text="Current File:" FontSize="16" Margin="5,0" />
+            <TextBlock Text="{Binding Path=CurrentFileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontSize="16" />
+        </StackPanel>
 
-
-        <TextBox Grid.Column="0" Grid.Row="2" Margin="5"></TextBox>
+        <TextBox Grid.Column="0" Grid.Row="2" Margin="5" Text="{Binding Path=CurrentFileContent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
         <TextBlock Grid.Column="1" Grid.Row="1" Text="Recently used files" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Bottom" />
         <ListView Grid.Column="1" Grid.Row="2" Margin="5" DataContext="{Binding Path=RecentFiles}">

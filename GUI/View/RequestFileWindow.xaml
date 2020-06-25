@@ -24,10 +24,11 @@
         <TextBlock Grid.Column="0" Grid.Row="1" Style="{StaticResource LabelStyle}" Text="Auth Key" />
         <TextBlock Grid.Column="0" Grid.Row="2" Style="{StaticResource LabelStyle}" Text="Absolute file path" />
 
-        <TextBox Grid.Column="1" Grid.Row="0" Style="{StaticResource InputStyle}" />
-        <TextBox Grid.Column="1" Grid.Row="1" Style="{StaticResource InputStyle}" />
-        <TextBox Grid.Column="1" Grid.Row="2" Style="{StaticResource InputStyle}" />
-        <Button Grid.Column="1" Grid.Row="3" Width="80" Height="25" Content="Request" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5" />
+        <TextBox Grid.Column="1" Grid.Row="0" Style="{StaticResource InputStyle}" Text="{Binding Path=ServerAddress}" />
+        <TextBox Grid.Column="1" Grid.Row="1" Style="{StaticResource InputStyle}" Text="{Binding Path=AuthKey}" />
+        <TextBox Grid.Column="1" Grid.Row="2" Style="{StaticResource InputStyle}" Text="{Binding Path=RemoteFile}" />
+        <Button Grid.Column="1" Grid.Row="3" Width="80" Height="25" Content="Request" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5"
+                Command="{Binding Path=RequestFileCommand}" />
 
     </Grid>
 </Window>
